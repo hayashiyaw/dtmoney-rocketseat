@@ -1,10 +1,13 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useContext } from 'react';
+
 import Modal from 'react-modal';
 import closeImg from '../../assets/close.svg';
 import incomeImg from '../../assets/income.svg';
 import outcomeImg from '../../assets/outcome.svg';
-import { api } from '../../services/api';
+import { useTransactions } from '../../hooks/useTransactions';
+
 import { Container, TransactionTypeContainer, RadioBox } from './styles';
+
 
 interface NewTransactionModalProps{
   IsOpenModal: boolean;
@@ -12,43 +15,45 @@ interface NewTransactionModalProps{
 }
 
 export function NewTransactionModal({ IsOpenModal, onRequestClose } : NewTransactionModalProps ){
-  const [type, setType] = useState('deposit');
-  
+
+  const { createTransaction } = useTransactions();
+
   const [title, setTitle] = useState('');
-  const [value, setValue] = useState(0);
+  const [amount, setAmount] = useState(0);
   const [category, setCategory] = useState('');
+  const [type, setType] = useState('deposit');
 
-
-
-
-  function handleCreateNewTransaction(event: FormEvent){
+  async function handleCreateNewTransaction(event: FormEvent){
     event.preventDefault();
 
-    const data = ({
-      category,
+    await createTransaction({
       title,
-      type, 
-      value      
+      amount,
+      category,
+      type
     })
 
-    api.post('/transactions', data);
+    setTitle('');
+    setAmount(0);
+    setCategory('');
+    setType('deposit');
 
+    onRequestClose();
   }
 
-
   return(
-    <Modal 
-      isOpen={IsOpenModal} 
-      onRequestClose={onRequestClose} 
+    <Modal
+      isOpen={IsOpenModal}
+      onRequestClose={onRequestClose}
       overlayClassName="react-modal-overlay"
       className="react-modal-content"
     >
-      <button 
-        type="button" 
-        onClick={onRequestClose}  
-        className= "react-modal-close"        
-      > 
-        <img src={closeImg} alt="Fechar" />      
+      <button
+        type="button"
+        onClick={onRequestClose}
+        className= "react-modal-close"
+      >
+        <img src={closeImg} alt="Fechar" />
       </button>
 
       <Container onSubmit={handleCreateNewTransaction}>
@@ -57,18 +62,18 @@ export function NewTransactionModal({ IsOpenModal, onRequestClose } : NewTransac
         <input
           placeholder="Título"
           value={title}
-          onChange={event => setTitle(event.target.value)} 
+          onChange={event => setTitle(event.target.value)}
         />
          <input
           type="number"
-          placeholder="Valor"     
-          value= {value}
-          onChange={event => setValue(Number(event.target.value))}     
+          placeholder="Valor"
+          value= {amount}
+          onChange={event => setAmount(Number(event.target.value))}
         />
 
         <TransactionTypeContainer>
           <RadioBox
-            type="button"            
+            type="button"
             onClick={() => { setType('deposit')}}
             isActive={type === 'deposit'}
             activeColor="green"
@@ -90,20 +95,17 @@ export function NewTransactionModal({ IsOpenModal, onRequestClose } : NewTransac
         </TransactionTypeContainer>
 
 
-        <input          
-          placeholder="categoria"      
+        <input
+          placeholder="categoria"
           value={category}
-          onChange={event => setCategory(event.target.value)}    
+          onChange={event => setCategory(event.target.value)}
         />
 
         <button type="submit">
           Cadastrar
-        </button>        
-      </Container>    
+        </button>
+      </Container>
     </Modal>
 
   )
-  
-  
-
 }
